@@ -19,9 +19,11 @@
   },
   "homepage": "https://github.com/challengerdeep/market-ws-client-node#readme",
   "dependencies": {
+    "debug": "^4.1.1",
     "ws": "^6.1.2"
   },
   "devDependencies": {
+    "@types/debug": "0.0.31",
     "@types/ws": "^6.0.1"
   }
 }
