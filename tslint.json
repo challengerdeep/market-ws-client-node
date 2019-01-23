@@ -13,7 +13,9 @@
         "object-literal-sort-keys": false,
         "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
         "no-unused-expression": [true, "allow-fast-null-checks"],
-        "arrow-parens": [true, "ban-single-arg-parens"]
+        "arrow-parens": [true, "ban-single-arg-parens"],
+        "semicolon": [true, "always", "ignore-interfaces"],
+        "interface-name":  false
     },
     "rulesDirectory": []
 }
