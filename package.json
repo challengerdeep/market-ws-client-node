@@ -1,0 +1,27 @@
+{
+  "name": "kaiko-market-ws-client",
+  "version": "0.1.0",
+  "description": "Sample WebSockets client for Kaiko Market Data WebSockets API",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tslint --config tslint.json 'src/**/*.ts' -t verbose",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/challengerdeep/market-ws-client-node.git"
+  },
+  "author": "Robert Edström <legogris@legogris.se>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/challengerdeep/market-ws-client-node/issues"
+  },
+  "homepage": "https://github.com/challengerdeep/market-ws-client-node#readme",
+  "dependencies": {
+    "ws": "^6.1.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^6.0.1"
+  }
+}
