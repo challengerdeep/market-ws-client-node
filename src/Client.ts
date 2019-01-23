@@ -1,16 +1,17 @@
-import ws = require('ws');
+import d = require('debug');
 import { EventEmitter } from 'events';
+import ws = require('ws');
 
-const ENDPOINT = 'ws://127.0.0.1';
-const API_KEY = '123';
+const debug = d('ws-client');
+
 interface WSError {
   error: any
   message: string
   type: string
-  target: ws 
+  target: ws
 }
 
-interface Subscription {
+export interface Subscription {
   topic: string
   exchange: string
   instrument_class: string
@@ -18,7 +19,7 @@ interface Subscription {
   data_version?: string
 }
 
-interface TradeEntry {
+export interface TradeEntry {
   timestamp: number
   trade_id: string
   price: string
@@ -26,7 +27,7 @@ interface TradeEntry {
   taker_side_sell: boolean
 }
 
-interface SubscriptionInfo extends Subscription {
+export interface SubscriptionInfo extends Subscription {
   data_version: string
   id: string
 }
@@ -53,24 +54,26 @@ interface UpdateMessage extends ServerMessage {
   }
 }
 
-export class Client extends EventEmitter {
-  public socket: ws;
-  public subscriptions: SubscriptionInfo[];
-
-  constructor(socket: ws) {
-    super();
-    this.socket = socket;
-    this.socket.addEventListener('message', (event) => {
-      const body = JSON.parse(event.data);
-    })
+interface ErrorMessage extends ServerMessage {
+  event: 'error'
+  payload: {
+    name: string
+    message: string
   }
-  
+}
+
+export class Client extends EventEmitter {
+
   private static isSubscribedMessage(message: ServerMessage): message is SubscribedMessage {
     return message.event === 'info' && message.payload.message === 'subscribed';
   }
 
   private static isUpdateMessage(message: ServerMessage): message is UpdateMessage {
     return message.event === 'update';
+  }
+
+  private static isErrorMessage(message: ServerMessage): message is ErrorMessage {
+    return message.event === 'error';
   }
 
   private static parseMessage(event: { data: ws.Data; type: string; target: ws }): ServerMessage {
@@ -80,47 +83,63 @@ export class Client extends EventEmitter {
     const message: ServerMessage = JSON.parse(body);
     return message;
   }
-  
-  async subscribe(subscriptions: Subscription[]): Promise<SubscriptionInfo[]> {
+  public socket: ws;
+  public subscriptions: SubscriptionInfo[];
+
+  constructor(socket: ws) {
+    super();
+    this.socket = socket;
+    this.socket.addEventListener('message', event => {
+      this.onMessage(event);
+    });
+  }
+
+  public async subscribe(subscriptions: Subscription[]): Promise<SubscriptionInfo[]> {
     return new Promise<SubscriptionInfo[]>((resolve, reject) => {
       const command = {
         command: 'subscribe',
         args: { subscriptions }
       };
-      const onSubscribedMessage = (event: { data: ws.Data; type: string; target: ws }) => {
-        const message = Client.parseMessage(event)
-        console.log('onMessage', message);
-        if (Client.isSubscribedMessage(message)) {
-          this.socket.removeEventListener('message', onSubscribedMessage);
-          this.socket.addEventListener('message', onUpdateMessage);
-          this.subscriptions = message.payload.subscriptions;
-          resolve(message.payload.subscriptions);
-        }
+      const onError = (message: ErrorMessage) => {
+        this.removeListener('error', onError);
+        this.removeListener('subscribed', onSubscribed);
+        reject(message.payload);
       };
-      const onUpdateMessage = (event: { data: ws.Data; type: string; target: ws }) => {
-        const message = Client.parseMessage(event)
-        console.log('onUpdateMessage', message);
-        if (Client.isUpdateMessage(message)) {
-          this.emit('update', message.payload);
-        }
+      const onSubscribed = (message: SubscribedMessage) => {
+        this.subscriptions = message.payload.subscriptions;
+        this.removeListener('error', onError);
+        this.removeListener('subscribed', onSubscribed);
+        resolve(message.payload.subscriptions);
       };
-      this.socket.addEventListener('message', onSubscribedMessage);
-      console.log('sending command', command);
+      this.addListener('subscribed', onSubscribed);
+      this.addListener('error', onError);
       this.socket.send(JSON.stringify(command));
     });
   }
+
+  private onMessage(event: { data: ws.Data; type: string; target: ws }) {
+    const message = Client.parseMessage(event);
+    debug('onMessage', message);
+    if (Client.isSubscribedMessage(message)) {
+      this.emit('subscribed', message);
+    } else if (Client.isUpdateMessage(message)) {
+      this.emit('update', message.payload);
+    } else if (Client.isErrorMessage(message)) {
+      this.emit('error', message);
+    }
+  }
 }
 
-export const connect = async (endpoint: string, apiKey: string, onError: (event: WSError) => void): Promise<Client> => {
+export const connect = async (endpoint: string, apiKey: string, onSocketError: ((event: WSError) => void) = () => undefined): Promise<Client> => {
   return new Promise<Client>((resolve, reject) => {
     const socket = new ws(endpoint, ['api_key', apiKey]);
     socket.onopen = () => {
-      socket.onerror = onError;
+      socket.onerror = onSocketError;
       const client = new Client(socket);
       resolve(client);
     };
-    socket.onerror = (event) => {
+    socket.onerror = event => {
       reject(event);
     };
   });
-}
+};
