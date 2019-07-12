@@ -72,6 +72,10 @@ export class Client extends EventEmitter {
     return message.event === 'update';
   }
 
+  private static isInfoMessage(message: ServerMessage): message is UpdateMessage {
+    return message.event === 'info';
+  }
+
   private static isErrorMessage(message: ServerMessage): message is ErrorMessage {
     return message.event === 'error';
   }
@@ -124,6 +128,8 @@ export class Client extends EventEmitter {
       this.emit('subscribed', message);
     } else if (Client.isUpdateMessage(message)) {
       this.emit('update', message.payload);
+    } else if (Client.isInfoMessage(message)) {
+      this.emit('info', message.payload);
     } else if (Client.isErrorMessage(message)) {
       this.emit('error', message);
     }
