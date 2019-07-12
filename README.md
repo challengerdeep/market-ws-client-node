@@ -4,8 +4,7 @@ Included is a reusable client (`src/Client.ts`) and a sample CLI application (`s
 
 ## Requirements
 
-* Node.js (Tested with version 10.15.0)
-* Typescript (Tested with version 3.1.3)
+* Node.js (Tested with version 10.16.0)
 
 ### Building
 
@@ -13,10 +12,9 @@ Included is a reusable client (`src/Client.ts`) and a sample CLI application (`s
 
 ### Running the sample client
 
-See [documentation](https://gist.github.com/Fonsan/6098b599886fbd8f06ce91712892aa92) for explanation of the [subscriptions](https://gist.github.com/Fonsan/6098b599886fbd8f06ce91712892aa92#subscription-command) parameter.
+See [documentation](https://docs.kaiko.com/#websocket-market-data-api) for explanation of [instrument selection](https://docs.kaiko.com/#instrument-selection).
 
 `echo $SUBSCRIPTIONS | node dist/example-cli.js $ENDPOINT $API_KEY`
 
 ### Example
-
-`echo '[{"topic":"trades","exchange":"bfnx","instrument_class":"spot","instrument":"btc-usd","data_version":"v1"},{"topic":"trades","exchange":"bfnx","instrument_class":"spot","instrument":"eth-eur","data_version":"v1"}]' | node dist/example-cli.js wss://eu-beta.market-ws.kaiko.io/v1 1337DEADBEEF`
+`echo '{"topic":"trades","pattern":"bfnx:spot:eth-eur,btc-usd","data_version":"v1"}' | node dist/example-cli.js wss://eu.market-ws.kaiko.io/v2/rpc INSERT_API_KEY_HERE`
