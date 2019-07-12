@@ -1,7 +1,7 @@
 // tslint:disable:no-console
 import fs = require('fs');
 import Client = require('./Client');
-import { Subscription, SubscriptionInfo, TradeEntry } from './Client';
+import { Subscription, TradeEntry } from './Client';
 
 const entriesBySubscription: {[subscriptionID: string]: TradeEntry[]} = {};
 
@@ -15,17 +15,11 @@ const run = async () => {
       console.log('connected');
       client.on('error', e => console.error(e));
       client.on('subscribed', message => {
-        console.log('subscribed', message.payload.subscriptions);
-        message.payload.subscriptions.forEach((sub: SubscriptionInfo) => {
-          entriesBySubscription[sub.id] = [];
-        });
+        console.log('subscribed', message.payload);
       });
       client.on('update', u => {
-        entriesBySubscription[u.subscription.id] = entriesBySubscription[u.subscription.id].concat(u.data);
-        if (u.data_count !== entriesBySubscription[u.subscription.id].length) {
-          console.error(`Mismatch of number of entries expected (${u.data_count}) vs received (${entriesBySubscription[u.subscription.id].length})`);
-        }
-        console.log('update', u.subscription.exchange, u.subscription.instrument, u.data_count);
+        entriesBySubscription[u.subscription.id] = (entriesBySubscription[u.subscription.id] || []).concat(u.data);
+        console.log('update', u.subscription.exchange, u.subscription.instrument);
       });
       return client.subscribe(subscriptions);
     }).catch(e => console.error(e));
