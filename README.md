@@ -14,7 +14,10 @@ Included is a reusable client (`src/Client.ts`) and a sample CLI application (`s
 
 See [documentation](https://docs.kaiko.com/#websocket-market-data-api) for explanation of [instrument selection](https://docs.kaiko.com/#instrument-selection).
 
-`echo $SUBSCRIPTIONS | node dist/example-cli.js $ENDPOINT $API_KEY`
+`echo $SUBSCRIPTIONS | node dist/example-cli-rpc.js $ENDPOINT $API_KEY`
 
-### Example
-`echo '{"topic":"trades","pattern":"bfnx:spot:eth-eur,btc-usd","data_version":"v1"}' | node dist/example-cli.js wss://eu.market-ws.kaiko.io/v2/rpc INSERT_API_KEY_HERE`
+### Example (subscription endpoint)
+`node dist/example-cli-subscription.js wss://us.market-ws.kaiko.io/v2/data/trades_ws.v1/bfnx:spot:btc-usd INSERT_API_KEY_HERE`
+
+### Example (RPC endpoint)
+`echo '{"topic":"trades","pattern":"bfnx:spot:eth-eur,btc-usd","data_version":"v1"}' | node dist/example-cli-rpc.js wss://us.market-ws.kaiko.io/v2/rpc INSERT_API_KEY_HERE`
